@@ -155,6 +155,21 @@ class MinimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
 
+      def minimaxHelper(self, gameState, depth, agentIndex):
+        if gameState.isWin() or gameState.isLose():
+          return self.evaluationFunction(gameState)
+        else:
+          if agentIndex = 0:
+            return maxValue(gameState, depth)
+          else:
+            return minValue(gameState, depth)
+            
+      def maxValue(self, gameState, depth):
+        return
+      def minValue(self, gameState, depth):
+        return
+
+
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
       Your minimax agent with alpha-beta pruning (question 3)
