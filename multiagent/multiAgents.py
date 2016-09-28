@@ -298,7 +298,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             if check:
               v += (1.0/float(len(legalActions)))*(expectimaxHelper(successor, depth - 1, 0))
             else:
-              v = (1.0/float(len(legalActions)))*(expectimaxHelper(successor, depth, agentIndex + 1))
+              v += (1.0/float(len(legalActions)))*(expectimaxHelper(successor, depth, agentIndex + 1))
           return v
 
         successorsOut = [(gameState.generateSuccessor(0, action), action) for action in gameState.getLegalActions(0)]
