@@ -186,14 +186,8 @@ class MinimaxAgent(MultiAgentSearchAgent):
             else:
               v = min(v, (minimaxHelper(successor, depth, agentIndex + 1)))
           return v
-
-        successorsOut = [(gameState.generateSuccessor(0, action), action) for action in gameState.getLegalActions(0)]
-        vFinal, vFinalAction = float("-inf"), None
-        for succ, act in successorsOut:
-          minimaxVal = minimaxHelper(succ, self.depth, 1)
-          if minimaxVal > vFinal:
-            vFinal, vFinalAction = minimaxVal, act
-        return vFinalAction
+        
+        return actionGenerator(gameState, self.depth, minimaxHelper)
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -205,7 +199,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        def minimaxHelper(gameState, depth, agentIndex, a, b):
+
+        def abHelper(gameState, depth, agentIndex, a, b):
           if gameState.isWin() or gameState.isLose() or depth == 0: #reached the depth specified or win / lose position
             return self.evaluationFunction(gameState)
           else:
@@ -216,10 +211,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         def maxValue(gameState, depth, agentIndex, a, b):
           v = float('-inf')
           legalActions = gameState.getLegalActions(agentIndex)
-          successors = [gameState.generateSuccessor(agentIndex, action) for action in legalActions] #generate all possible successors
-          
-          for successor in successors:
-            v = max(v, (minimaxHelper(successor, depth, agentIndex + 1, a, b)))
+          for action in legalActions:
+            v = max(v, abHelper(gameState.generateSuccessor(agentIndex, action), depth, agentIndex + 1, a, b))
             if v > b:
               return v
             a = max(a, v)
@@ -228,32 +221,35 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         def minValue(gameState, depth, agentIndex, a, b):
           check = False
           v = float('inf')
-          legalActions = gameState.getLegalActions(agentIndex) #generate all legal actions of agent
-          successors = [gameState.generateSuccessor(agentIndex, action) for action in legalActions] #generate all possible successors
-          
+          legalActions = gameState.getLegalActions(agentIndex) #generate all legal actions of agent          
           if agentIndex == gameState.getNumAgents() - 1: #last ghost agent (moving to next ply / on to Pacman)
             check = True
           
-          for successor in successors:
+          for action in legalActions:
+            successor = gameState.generateSuccessor(agentIndex, action)
             if check:
-              v = min(v, (minimaxHelper(successor, depth - 1, 0, a, b)))
+              v = min(v, (abHelper(successor, depth - 1, 0, a, b)))
               if v < a:
                 return v
               b = min(v, b)
             else:
-              v = min(v, (minimaxHelper(successor, depth, agentIndex + 1, a, b)))
+              v = min(v, (abHelper(successor, depth, agentIndex + 1, a, b)))
               if v < a:
                 return v
               b = min(v, b)
           return v
 
-        successorsOut = [(gameState.generateSuccessor(0, action), action) for action in gameState.getLegalActions(0)]
-        vFinal, vFinalAction = float("-inf"), None
-        for succ, act in successorsOut:
-          minimaxVal = minimaxHelper(succ, self.depth, 1, float("-inf"), float("inf"))
-          if minimaxVal > vFinal:
-            vFinal, vFinalAction = minimaxVal, act
-        return vFinalAction
+        legalActions = gameState.getLegalActions(0)
+        v, action = float("-inf"), None
+        a = float("-inf")
+        b = float("inf")
+        for act in legalActions:
+          successor = gameState.generateSuccessor(0, act)
+          abVal = abHelper(successor, self.depth, 1, a, b)
+          if abVal > v:
+            v, action = abVal, act
+          a = max(a, v)
+        return action
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -275,6 +271,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             if agentIndex == 0: #pacman --> maximizing agent
               return maxValue(gameState, depth, agentIndex)
             return expValue(gameState, depth, agentIndex)
+
 
         def maxValue(gameState, depth, agentIndex):
           v = float('-inf')
@@ -301,13 +298,17 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
               v += (1.0/float(len(legalActions)))*(expectimaxHelper(successor, depth, agentIndex + 1))
           return v
 
-        successorsOut = [(gameState.generateSuccessor(0, action), action) for action in gameState.getLegalActions(0)]
-        vFinal, vFinalAction = float("-inf"), None
-        for succ, act in successorsOut:
-          expectimaxVal = expectimaxHelper(succ, self.depth, 1)
-          if expectimaxVal > vFinal:
-            vFinal, vFinalAction = expectimaxVal, act
-        return vFinalAction
+        return actionGenerator(gameState, self.depth, expectimaxHelper)
+
+def actionGenerator (gameState, depth, valueFunc):
+  successorsOut = [(gameState.generateSuccessor(0, action), action) for action in gameState.getLegalActions(0)]
+  v, action = float("-inf"), None
+  for successor, act in successorsOut:
+    # stratVal = strategy(successor, depth, 1)
+    stratVal = valueFunc(successor, depth, 1)
+    if stratVal > v:
+      v, action = stratVal, act
+  return action
 
 def betterEvaluationFunction(currentGameState):
     """
