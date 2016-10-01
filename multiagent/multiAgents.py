@@ -78,9 +78,9 @@ class ReflexAgent(Agent):
         ghostDistances = [util.manhattanDistance(newPos, ghostPos.getPosition()) for ghostPos in newGhostStates]
 
         if len(distances) > 0:
-          closestFood, furthestFood = min(distances), max(distances)
+          closestFood = min(distances)
         else:
-          closestFood, furthestFood = 0, 0
+          closestFood = 0
 
         if len(ghostDistances) > 0:
           closestGhost = min(ghostDistances)
@@ -88,7 +88,7 @@ class ReflexAgent(Agent):
           closestGhost = 0
 
         if closestGhost == 0 or closestGhost == 1:
-          return -9999999999
+          return float("-inf")
 
         evaluationScore = 2*(1.0/(closestFood+1.0)) + successorGameState.getScore() - (1.0/(closestGhost+1.0)) 
 
@@ -133,27 +133,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
           Returns the minimax action from the current gameState using self.depth
           and self.evaluationFunction.
-
-          Here are some method calls that might be useful when implementing minimax.
-
-          gameState.getLegalActions(agentIndex):
-            Returns a list of legal actions for an agent
-            agentIndex=0 means Pacman, ghosts are >= 1
-
-          gameState.generateSuccessor(agentIndex, action):
-            Returns the successor game state after an agent takes an action
-
-          gameState.getNumAgents():
-            Returns the total number of agents in the game
-
-          gameState.isWin():
-            Returns whether or not the game state is a winning state
-
-          gameState.isLose():
-            Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-
         def minimaxHelper(gameState, depth, agentIndex):
           if gameState.isWin() or gameState.isLose() or depth == 0: #reached the depth specified or win / lose position
             return self.evaluationFunction(gameState)
@@ -318,7 +298,39 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    evaluationScore = currentGameState.getScore()
+    pacPosition = currentGameState.getPacmanPosition()
+    foodPositions = currentGameState.getFood().asList()
+    foodDistances = [util.manhattanDistance(pacPosition, foodPellot) for foodPellot in foodPositions]
+    ghostStates = currentGameState.getGhostStates()
+    scaredTimes = [ghost.scaredTimer for ghost in ghostStates]
+    ghostDistances = [util.manhattanDistance(pacPosition, ghostState.getPosition()) for ghostState in ghostStates]
+    capsules = currentGameState.getCapsules()
+    capsuleDistances = [util.manhattanDistance(pacPosition, capsule) for capsule in capsules]
+    
+    closestFood = float('inf')
+    if len(foodDistances) > 0:
+      closestFood = min(foodDistances)
+    evaluationScore += (1.0/(closestFood + 1.0))
+
+    closestCapsule = float('inf')
+    if len(capsuleDistances) > 0:
+      closestCapsule = min(capsuleDistances)
+    evaluationScore += (1.0 / (closestCapsule + 1.0))
+    
+    scaredGhostTotalTime = reduce(lambda x, y: x + y, scaredTimes, 0)
+    evaluationScore += scaredGhostTotalTime
+
+    closestGhost = float('inf')
+    if len(ghostDistances) > 0:
+      closestGhost = min(ghostDistances)
+
+    if closestGhost == 0 or closestGhost == 1:
+      return float('-inf')
+
+    evaluationScore -= (1.0 / (closestGhost + 1.0))
+    
+    return evaluationScore
 
 # Abbreviation
 better = betterEvaluationFunction
