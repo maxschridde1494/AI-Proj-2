@@ -316,7 +316,7 @@ def betterEvaluationFunction(currentGameState):
     closestCapsule = float('inf')
     if len(capsuleDistances) > 0:
       closestCapsule = min(capsuleDistances)
-    evaluationScore += (1.0 / (closestCapsule + 1.0))
+    evaluationScore += (1.0 / (closestCapsule + 1.0))*3
     
     scaredGhostTotalTime = reduce(lambda x, y: x + y, scaredTimes, 0)
     evaluationScore += scaredGhostTotalTime
